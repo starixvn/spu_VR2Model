@@ -1,0 +1,43 @@
+ALTER PROCEDURE [dbo].[VRModel_Sportsbook_Soccer_3_CreateRawChanceOfDanger]
+AS
+/*
+	Created: 20200212@Long.Luu
+	Task : 
+	DB: bodb_VR2Model
+	Original:
+
+	Revisions:
+		- 20200212@Long.Luu: Created [Redmine ID: #127584]
+
+	Param's Explanation:
+*/
+BEGIN
+
+	SET NOCOUNT ON;
+
+	TRUNCATE TABLE dbo.[VR2Model_RawChanceOfDanger];
+		
+	INSERT INTO dbo.[VR2Model_RawChanceOfDanger](MarginRange, WeekOrder, PercentageOfWin)
+	SELECT	w.MarginRange
+		,	w.WeekOrder
+		,	w.NumOfWinner / (w.NumOfWinner + l.NumOfLoser)
+	FROM dbo.[VR2Model_WinnerByWeekCounter] AS w WITH(NOLOCK)
+		INNER JOIN dbo.[VR2Model_LoserByWeekCounter] AS l WITH(NOLOCK) ON w.MarginRange = l.MarginRange AND w.WeekOrder = l.WeekOrder
+
+	UNION
+
+	SELECT w.MarginRange, w.WeekOrder, 0.1
+	FROM dbo.[VR2Model_WinnerByWeekCounter] AS w WITH(NOLOCK)
+		LEFT JOIN dbo.[VR2Model_LoserByWeekCounter] AS l WITH(NOLOCK) ON w.MarginRange = l.MarginRange AND w.WeekOrder = l.WeekOrder
+	WHERE l.NumOfLoser IS NULL
+
+	UNION
+
+	SELECT l.MarginRange, l.WeekOrder, 0
+	FROM dbo.[VR2Model_WinnerByWeekCounter] AS w WITH(NOLOCK)
+		RIGHT JOIN dbo.[VR2Model_LoserByWeekCounter] AS l WITH(NOLOCK) ON w.MarginRange = l.MarginRange AND w.WeekOrder = l.WeekOrder
+	WHERE w.NumOfWinner IS NULL;
+
+END;
+
+/*<info serverAlias="DBFS-bodb_FraudSensor" executers="bodbSPUNet" isFunction="0" isNested="0"></info>*/
