@@ -70,24 +70,12 @@ BEGIN
 		AND w.BetCount > @Settings_MinBetCount
 		AND w.RealTurnover > @Settings_MinBet;
 
-	;WITH rs AS
-	(
-		SELECT	t.CustId, t.SuperId, t.WeekOrder, t.RealTurnover, t.RealWinloss
-		FROM dbo.VR2Model_StagingSoccerWeeklyData AS t WITH(NOLOCK)
-		WHERE t.WeekOrder = 1
-
-		UNION ALL
-
-		SELECT	t1.CustId, t1.SuperId, t1.WeekOrder, t1.RealTurnover + rs.RealTurnover,  t1.RealWinloss + rs.RealWinloss
-		FROM rs 
-			INNER JOIN dbo.VR2Model_StagingSoccerWeeklyData AS t1 WITH(NOLOCK) ON rs.CustId = t1.CustId AND t1.WeekOrder = rs.WeekOrder + 1
-	)
 	INSERT INTO dbo.[VR2Model_CumulativeMarginByWeek](CustId, SuperId, WeekOrder, Margin)
-	SELECT	CustId
-		,	SuperId
-		,	WeekOrder
-		,	CAST(ROUND(RealWinloss / RealTurnover, 2) AS NUMERIC(1,1))
-	FROM rs;
+	SELECT t1.CustId, t1.SuperId, t1.WeekOrder, CAST(ROUND(SUM(t2.RealWinloss) / SUM(t2.RealTurnover), 1) AS NUMERIC(2,1))
+	FROM dbo.VR2Model_StagingSoccerWeeklyData AS t1 WITH(NOLOCK)
+		LEFT JOIN dbo.VR2Model_StagingSoccerWeeklyData AS t2 WITH(NOLOCK)
+				ON t1.WeekOrder >= (t2.WeekOrder) AND t1.CustId = t2.CustId	
+	GROUP BY t1.CustId, t1.SuperId, t1.WeekOrder;
 		
 	UPDATE dbo.[VR2Model_CumulativeMarginByWeek] WITH(ROWLOCK, UPDLOCK)
 	SET Margin = 0.1
