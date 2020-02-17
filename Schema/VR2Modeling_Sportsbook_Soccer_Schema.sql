@@ -45,14 +45,14 @@ GO
 CREATE TABLE [dbo].[VR2Model_CumulativeMarginByWeek] (
 		[CustId]		INT NOT NULL
 	,	[SuperId]		INT NOT NULL
-	,	[Margin]		NUMERIC(2,2) NOT NULL
+	,	[Margin]		NUMERIC(3,2) NOT NULL
 	,	[WeekOrder]	    INT
 	,	CONSTRAINT PK_VR2Model_CumulativeMarginByWeek PRIMARY KEY CLUSTERED(
 			[CustId]    ASC,
 			[SuperId]	ASC,
 			[WeekOrder] ASC				
 		)
-);
+)ON [DATA];
 GO
 
 CREATE NONCLUSTERED INDEX [IX_VR2Model_CumulativeMarginByWeek_Margin] ON [dbo].[VR2Model_CumulativeMarginByWeek]
@@ -66,12 +66,12 @@ GO
 CREATE TABLE [dbo].[VR2Model_CustomerCumulativeInfo] (
 		[CustId]		    INT NOT NULL
 	,	[SuperId]			INT NOT NULL
-	,	[Margin]		    NUMERIC(2,2) NOT NULL
+	,	[Margin]		    NUMERIC(3,2) NOT NULL
 	,	[NumOfWeeksBet]	    INT
 	,	CONSTRAINT PK_VR2Model_CustomerCumulativeInfo PRIMARY KEY CLUSTERED(
 			[CustId]    ASC
 		)
-) ON [DATA];
+)ON [DATA] ;
 GO
 
 CREATE TABLE [dbo].[VR2Model_WinnerByWeekCounter] (
