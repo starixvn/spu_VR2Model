@@ -71,7 +71,7 @@ BEGIN
 		AND w.RealTurnover > @Settings_MinBet;
 
 	INSERT INTO dbo.[VR2Model_CumulativeMarginByWeek](CustId, SuperId, WeekOrder, Margin)
-	SELECT t1.CustId, t1.SuperId, t1.WeekOrder, CAST(ROUND(SUM(t2.RealWinloss) / SUM(t2.RealTurnover), 1) AS NUMERIC(2,1))
+	SELECT t1.CustId, t1.SuperId, t1.WeekOrder, CAST(ROUND(SUM(t2.RealWinloss) / SUM(t2.RealTurnover), 2) AS NUMERIC(3,2))
 	FROM dbo.VR2Model_StagingSoccerWeeklyData AS t1 WITH(NOLOCK)
 		LEFT JOIN dbo.VR2Model_StagingSoccerWeeklyData AS t2 WITH(NOLOCK)
 				ON t1.WeekOrder >= (t2.WeekOrder) AND t1.CustId = t2.CustId	
