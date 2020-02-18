@@ -24,7 +24,8 @@ BEGIN
 		,	w.WeekOrder
 		,	COUNT(DISTINCT w.CustId)
 	FROM dbo.[VR2Model_CumulativeMarginByWeek] AS w WITH(NOLOCK)
-	WHERE w.Margin > 0
+		INNER JOIN dbo.[VR2Model_CustomerCumulativeInfo] AS c WITH(NOLOCK) ON w.CustId = c.CustId
+	WHERE c.Margin > 0
 	GROUP BY w.Margin, w.WeekOrder;
 
 	INSERT INTO dbo.[VR2Model_LoserByWeekCounter](MarginRange, WeekOrder, NumOfLoser)
@@ -32,7 +33,8 @@ BEGIN
 		,	w.WeekOrder
 		,	COUNT(DISTINCT w.CustId)
 	FROM dbo.[VR2Model_CumulativeMarginByWeek] AS w WITH(NOLOCK)
-	WHERE w.Margin <= 0
+		INNER JOIN dbo.[VR2Model_CustomerCumulativeInfo] AS c WITH(NOLOCK) ON w.CustId = c.CustId
+	WHERE c.Margin <= 0
 	GROUP BY w.Margin, w.WeekOrder;
 
 END;

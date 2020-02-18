@@ -1,9 +1,9 @@
-CREATE PROCEDURE [dbo].[VRModel_Sportsbook_Soccer_7_ComputeVRSettings]
+ALTER PROCEDURE [dbo].[VRModel_Sportsbook_Soccer_7_ComputeVRSettings]
 		@FromDate			DATE
 	,	@ToDate				DATE
 	,	@IsDeposit			BIT
 	,	@IsLive				BIT
-	,	@SportId			INT
+	,	@SportId			INT = 1
 	,	@LeagueGroupId		SMALLINT
 	,	@Leagues			VARCHAR(200)
 	,	@BettypeGroupId		INT
@@ -49,16 +49,6 @@ BEGIN
 	SELECT val FROM dbo.SPU_StrSplit(@Leagues,',');
 
 	-- START
-	IF ((SELECT COUNT(1) FROM #tmpLeagues WITH(NOLOCK)) > 1)
-		BEGIN
-			SELECT @LeagueId = NULL, @BettypeId = NULL;
-		END
-	ELSE
-		BEGIN
-			SELECT TOP (1) @LeagueId = LeagueId
-			FROM #tmpLeagues WITH(NOLOCK);
-		END;
-
 	IF ((SELECT COUNT(1) FROM #tmpBettypes WITH(NOLOCK)) > 1)
 		BEGIN
 			SELECT @BettypeId = NULL;
@@ -67,6 +57,33 @@ BEGIN
 		BEGIN
 			SELECT TOP (1) @BettypeId = Bettype
 			FROM #tmpBettypes WITH(NOLOCK);
+		END;
+	
+	IF (@BettypeGroupId IS NULL)
+		BEGIN
+			SELECT	@BettypeId = NULL;
+		END;
+
+	IF ((SELECT COUNT(1) FROM #tmpLeagues WITH(NOLOCK)) > 1)
+		BEGIN
+			SELECT @LeagueId = NULL, @BettypeGroupId = NULL, @BettypeId = NULL;
+		END
+	ELSE
+		BEGIN
+			SELECT TOP (1) @LeagueId = LeagueId
+			FROM #tmpLeagues WITH(NOLOCK);
+		END;
+			
+	IF (@LeagueGroupId IS NULL)
+		BEGIN
+			SELECT	@LeagueId = NULL
+				,	@BettypeGroupId = NULL,	@BettypeId = NULL;
+		END;
+
+	IF (@SportId IS NULL)
+		BEGIN
+			SELECT	@LeagueGroupId = NULL, @LeagueId = NULL
+				,	@BettypeGroupId = NULL,	@BettypeId = NULL;
 		END;
 	
 	INSERT INTO dbo.VR2Model_VirtualRate(
@@ -80,19 +97,19 @@ BEGIN
 		,	BettypeId
 		,	VirtualMultiplier
 		,	CreatedDate)
-	SELECT	@IsDeposit
+	SELECT	c.CustId
+		,	@IsDeposit
 		,	@IsLive
 		,	@SportId
 		,	@LeagueGroupId
 		,	@LeagueId
 		,	@BettypeGroupId
 		,	@BettypeId
-		,	c.CustId
-		,	-((1 - d.PercentageOfWin * l.PercentageOfWin) * 100) AS VirtualRateSettings
+		,	-((1 - d.PercentageOfWin * (CASE WHEN l.PercentageOfWin IS NULL THEN 1 ELSE l.PercentageOfWin END))) AS VirtualRateSettings
 		,	GETDATE()
 	FROM dbo.VR2Model_CustomerCumulativeInfo AS c WITH(NOLOCK)
 		INNER JOIN dbo.VR2Model_ChanceOfDanger AS d WITH(NOLOCK) ON c.Margin = d.MarginRange AND c.NumOfWeeksBet = d.WeekOrder
-		INNER JOIN dbo.VR2Model_LicenseeModifier AS l WITH(NOLOCK) ON c.SuperId = l.SuperId;
+		LEFT JOIN dbo.VR2Model_LicenseeModifier AS l WITH(NOLOCK) ON c.SuperId = l.SuperId;
 END;
 
 /*<info serverAlias="DBFS-bodb_FraudSensor" executers="bodbSPUNet" isFunction="0" isNested="0"></info>*/

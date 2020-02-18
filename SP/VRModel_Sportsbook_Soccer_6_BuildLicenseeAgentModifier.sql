@@ -16,7 +16,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 	-- INITIALIZE
-	DECLARE @AVGLicenseePercentageOfDanger MONEY;
+	DECLARE @AVGLicenseePercentageOfDanger FLOAT;
 
 	IF	OBJECT_ID('tempdb..#tmpWinnerCounterByLicensee') IS NOT NULL
 	BEGIN
@@ -49,6 +49,8 @@ BEGIN
 	);
 	
 	-- START
+	TRUNCATE TABLE dbo.VR2Model_LicenseeModifier;
+
 	INSERT INTO #tmpWinnerCounterByLicensee(SuperId, NumOfWinner)
 	SELECT c.SuperId, COUNT(c.CustId)
 	FROM dbo.[VR2Model_CustomerCumulativeInfo] AS c WITH(NOLOCK)
@@ -63,17 +65,17 @@ BEGIN
 
 	INSERT INTO #tmpLicenseePercentageOfWin(SuperId, PercentageOfWin)
 	SELECT	w.SuperId
-		,	w.NumOfWinner / (w.NumOfWinner + l.NumOfLoser)
+		,	CAST(w.NumOfWinner AS FLOAT) / (w.NumOfWinner + l.NumOfLoser)
 	FROM #tmpWinnerCounterByLicensee AS w WITH(NOLOCK)
 		INNER JOIN #tmpLoserCounterByLicensee AS l WITH(NOLOCK) ON w.SuperId = l.SuperId;
 
-	SELECT @AVGLicenseePercentageOfDanger = SUM(w.NumOfWinner) / (SUM(w.NumOfWinner) + SUM(l.NumOfLoser))
+	SELECT @AVGLicenseePercentageOfDanger = CAST(SUM(w.NumOfWinner) AS FLOAT) / (SUM(w.NumOfWinner) + SUM(l.NumOfLoser))
 	FROM #tmpWinnerCounterByLicensee AS w WITH(NOLOCK)
 		INNER JOIN #tmpLoserCounterByLicensee AS l WITH(NOLOCK) ON w.SuperId = l.SuperId;
 
 	INSERT INTO dbo.VR2Model_LicenseeModifier(SuperId, PercentageOfWin)
 	SELECT	l.SuperId
-		,	l.PercentageOfWin * 100 / @AVGLicenseePercentageOfDanger
+		,	l.PercentageOfWin / @AVGLicenseePercentageOfDanger
 	FROM #tmpLicenseePercentageOfWin AS l WITH(NOLOCK);
 END;
 

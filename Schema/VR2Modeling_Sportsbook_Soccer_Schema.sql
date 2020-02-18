@@ -174,14 +174,18 @@ CREATE TABLE [dbo].[VR2Model_VirtualRate] (
 		[CustId]				INT NOT NULL
 	,	[IsDeposit]				BIT NOT NULL
 	,	[IsLive]				BIT NOT NULL
-	,	[SportId]				INT		
-	,	[LeagueGroupId]			INT			
-	,	[LeagueId]				INT
-	,	[BettypeGroupId]		INT
-	,	[BettypeId]				INT
-	,	[VirtualMultiplier]		FLOAT 
-	,	[CreatedDate]			DATETIME
-	,	CONSTRAINT PK_VR2Model_VirtualRate PRIMARY KEY CLUSTERED(
+	,	[SportId]				INT	NULL	
+	,	[LeagueGroupId]			INT	NULL	
+	,	[LeagueId]				INT NULL
+	,	[BettypeGroupId]		INT NULL
+	,	[BettypeId]				INT NULL
+	,	[VirtualMultiplier]		FLOAT NOT NULL
+	,	[CreatedDate]			DATE NOT NULL
+) ON [PRIMARY];
+GO
+
+CREATE CLUSTERED INDEX CIX_VR2Model_VirtualRate ON [dbo].[VR2Model_VirtualRate]
+(		
 			[CustId]			ASC,
 			[IsDeposit]			ASC,
 			[IsLive]			ASC,
@@ -190,6 +194,11 @@ CREATE TABLE [dbo].[VR2Model_VirtualRate] (
 			[LeagueId]			ASC,
 			[BettypeGroupId]	ASC,
 			[BettypeId]			ASC
-		)
-) ON [DATA];
+);
+GO
+
+CREATE NONCLUSTERED INDEX IX_VR2Model_VirtualRate_CreatedDate ON [dbo].[VR2Model_VirtualRate]
+(		
+			[CreatedDate]		ASC
+);
 GO

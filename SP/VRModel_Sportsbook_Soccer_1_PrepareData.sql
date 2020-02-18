@@ -3,7 +3,7 @@ ALTER PROCEDURE [dbo].[VRModel_Sportsbook_Soccer_1_PrepareData]
 	,	@ToDate				DATE
 	,	@IsDeposit			BIT
 	,	@IsLive				BIT
-	,	@SportId			INT
+	,	@SportId			INT = 1
 	,	@LeagueGroupId		SMALLINT
 	,	@Leagues			VARCHAR(200)
 	,	@BettypeGroupId		INT
@@ -25,8 +25,11 @@ BEGIN
 	SET NOCOUNT ON;
 
 	-- Initialize
-	DECLARE @Settings_MinBetCount	INT	= 1
+	DECLARE @Settings_MinBetCount	INT	= 5
 		,	@Settings_MinBet		MONEY = 499;
+		
+	DECLARE @BettypeId		INT
+		,	@LeagueId		INT;
 
 	IF	OBJECT_ID('tempdb..#tmpBettypes') IS NOT NULL
 		DROP TABLE	#tmpBettypes;
